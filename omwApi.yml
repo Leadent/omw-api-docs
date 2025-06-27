@@ -4,10 +4,8 @@ info:
   description: The OnMyWay API provides a set of endpoints for managing resources, activities and events in the OnMyWay system.
   version: 0.0.4
 servers:
-  - url: https://telneda.leadent-api.digital/v1
+  - url: https://telneda.leadent-api.digital
     description: Main API server
-  - url: https://telneda.auth.eu-west-2.amazoncognito.com/oauth2/token
-    description: Authentication server
 security:
   - BearerAuth: [] # Applies to all paths unless overridden
 paths:
@@ -412,6 +410,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /data/export:
+    get:
+      summary: Export data from the OMW system including notifications, clicks, rebooks and activities
+      description: Exports data from the OMW system.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            example: 2025-01-01
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            example: 2025-01-10
+      responses:
+        '200':
+          description: Data exported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExtractResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     BearerAuth:
@@ -858,3 +893,9 @@ components:
                         type: string
       required:
         - validationErrors
+    DataExtractResponse:
+        type: object
+        properties:
+            exportName:
+              type: string
+              example: 'https://some-path-to-download.com/somefile'
