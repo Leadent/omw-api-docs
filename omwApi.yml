@@ -412,8 +412,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /data/export:
     get:
-      summary: Export data from the OMW system including notifications, clicks, rebooks and activities
-      description: Exports data from the OMW system.
+      summary: Export data from the OMW system
+      description: Exports data from the OMW system including notifications, clicks, rebooks and activities. The response is a link to a zip file that contains a Microsoft Excel spreadsheet containing the data
       parameters:
         - name: from
           in: query
