@@ -15,8 +15,8 @@ paths:
       summary: API authentication
       description: Authenticates credentials and returns an access token to be used as a Bearer token on subsequent requests. 
         `grant_type` must be set to `client_credentials`. Values for other fields are client-specific, provided, on request, by Leadent.
-        Access tokens are cached in On My Way, so if you request a new token before a token expires, you will receive the same token.
-        We recommend you cache the token in your client system and only request a new one when the existing token expires.
+        <br>Access tokens are cached in On My Way, so if you request a new token before a token expires, you will receive the same token.
+        <br>We recommend you cache the token in your client system and only request a new one when the existing token expires.
       security: [] # No authentication required
       requestBody:
         required: true
