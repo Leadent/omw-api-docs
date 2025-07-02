@@ -13,8 +13,10 @@ paths:
   /oauth2/token:
     post:
       summary: API authentication
-      description: Authenticates credentials and returns a token to be used on subsequent requests. `grant_type` must be set
-        to `client_credentials`. Values for other fields are client-specific, provided by Leadent.
+      description: Authenticates credentials and returns an access token to be used as a Bearer token on subsequent requests. 
+        `grant_type` must be set to `client_credentials`. Values for other fields are client-specific, provided, on request, by Leadent.
+        Access tokens are cached in On My Way, so if you request a new token before a token expires, you will receive the same token.
+        We recommend you cache the token in your client system and only request a new one when the existing token expires.
       security: [] # No authentication required
       requestBody:
         required: true
@@ -47,7 +49,7 @@ paths:
                 properties:
                   access_token:
                     type: string
-                    description: JWT token
+                    description: JWT access token
                     example: eyJraWQiOiJk
                   expires_in:
                     type: integer
