@@ -1,11 +1,11 @@
 openapi: 3.0.0
 info:
   title: OnMyWay API
-  description: The OnMyWay API provides a set of endpoints for managing resources, activities and events in the OnMyWay system.
+  description: The On My Way API provides a set of endpoints for managing resources, activities and events in the On My Way system.
   version: 1.0.0
 servers:
   - url: https://telneda.leadent-api.digital
-    description: Main API server
+    description: Demo API server
 security:
   - BearerAuth: [] # Applies to all paths unless overridden
 paths:
@@ -412,8 +412,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /data/export:
     get:
-      summary: Export data from the OMW system
-      description: Exports data from the OMW system including notifications, clicks, rebooks and activities. The response is a link to a zip file that contains a Microsoft Excel spreadsheet containing the data
+      summary: Export data from the On My Way system
+      description: Exports data from the On My Way system including notifications, clicks, rebooks and activities. The response is a JSON object that contains a link to a zip file with a Microsoft Excel spreadsheet inside which, in turn, contains the data
       parameters:
         - name: from
           in: query
@@ -507,7 +507,7 @@ components:
           type: string
           description: |
             Geographical region to which a resource is associated for scheduling purposes. Not part of the postal address
-            displayed to the end-customer, but can be used to drive OMW behaviour, such as notification rules.
+            displayed to the end-customer, but can be used to drive On My Way behaviour, such as notification rules.
           example: SW
         timezone:
           type: string
@@ -522,7 +522,7 @@ components:
           properties:
             resourceType:
               type: string
-              description: Any string, usually an enumeration in the client system. Can be used to drive OMW behaviour.
+              description: Any string, usually an enumeration in the client system. Can be used to drive On My Way behaviour.
               example: GASTECH
             firstName:
               type: string
@@ -564,7 +564,7 @@ components:
         location:
           allOf:
             - $ref: '#/components/schemas/Location'
-            - description: The location of the resource. Expected for LOCATION event but can be provided on any event. Set to null to remove the previous location.
+            - description: The location of the resource. Expected for a LOCATION event but can be provided on any event. Set to null to remove the previous location.
         timestamp:
           type: string
           format: date-time
@@ -588,7 +588,7 @@ components:
           properties:
             activityType:
               type: string
-              description: Any string, usually an enumeration in the client system. Can be used to drive OMW behaviour.
+              description: Any string, usually an enumeration in the client system. Can be used to drive On My Way behaviour.
               example: GASINST
             description:
               type: string
@@ -596,7 +596,7 @@ components:
               example: Install gas boiler TNPro7000
             passcode:
               type: string
-              description: Required to be entered by the customer to use the OMW app.
+              description: Required to be entered by the customer to use the On My Way web app when the feature is enabled.
               example: SW1ADent
         allocation:
           type: object
@@ -631,7 +631,7 @@ components:
             - $ref: '#/components/schemas/AddressedLocation'
         campaign:
           type: object
-          description: Details relating to campaign banners display for this activity on the OMW app.
+          description: Details relating to campaign banners displayed for this activity on the On My Way web app.
           properties:
             categories:
               type: array
@@ -677,15 +677,15 @@ components:
           properties:
             identity:
               type: object
-              description: Unique identifiers for this activity in OMW.
+              description: Unique identifiers for this activity in On My Way.
               properties:
                 leadentId:
                   type: string
-                  description: Unique OMW id/token for this activity, derived from datasetId and activityId.
+                  description: Unique On My Way id/token for this activity, derived from datasetId and activityId.
                   example: arxkoiDvPy8vL49fSmPj4
-                omwLink:
+                On My WayLink:
                   type: string
-                  description: Unique OMW URL for this activity.
+                  description: Unique On My Way URL for this activity.
                   example: https://ldnt.cc/nx1r
             handling:
               type: object
@@ -694,7 +694,7 @@ components:
                 processingDisabled:
                   type: boolean
                   default: false
-                  description: If true, OMW will not process updates for this activity.
+                  description: If true, On My Way will not process updates for this activity.
                 confirmationTime:
                   type: string
                   format: date-time
@@ -715,7 +715,7 @@ components:
                 createTime:
                   type: string
                   format: date-time
-                  description: Time the activity was first created in OMW.
+                  description: Time the activity was first created in On My Way.
                 activateTime:
                   type: string
                   format: date-time
@@ -757,7 +757,7 @@ components:
       description: |
         This status captures the progress of the activity through its lifecycle. The statuses are fine-grained and not
         all will be applicable to client systems. Status can be used to trigger notification rules. The status values are grouped
-        into a simplified status which is used to drive behaviour of the OMW app, including what text to display. These simplified
+        into a simplified status which is used to drive behaviour of the On My Way web app, including what text to display. These simplified
         statuses are listed below (with the full statuses which map to them in brackets):
         - Cancelled (CANCELLED)
         - Unscheduled (UNSCHEDULED, IGNORE)
