@@ -1,7 +1,8 @@
 openapi: 3.0.0
 info:
   title: OnMyWay API
-  description: The On My Way API provides a set of endpoints for managing resources, activities and events in the On My Way system.
+  description: The On My Way API provides a set of endpoints for managing resources, activities and events in the On My Way system. 
+    There is also provision for data extraction. Auth is via OAuth2.
   version: 1.0.0
 servers:
   - url: https://telneda.leadent-api.digital
