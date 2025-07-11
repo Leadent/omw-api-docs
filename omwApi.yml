@@ -3,7 +3,7 @@ info:
   title: OnMyWay API
   description: The On My Way API provides a set of endpoints for managing resources, activities and events in the On My Way system. 
     There is also provision for data extraction. Auth is via OAuth2.
-  version: 1.0.0
+  version: 1.0.1
 servers:
   - url: https://telneda.leadent-api.digital
     description: Demo API server
@@ -423,12 +423,14 @@ paths:
           required: true
           schema:
             type: string
+            format: date
             example: 2025-01-01
         - name: to
           in: query
           required: true
           schema:
             type: string
+            format: date
             example: 2025-01-10
         - name: type
           in: query
@@ -439,12 +441,14 @@ paths:
               - xlsx
               - csv
             description: The type of data to export. Defaults to xlsx. If csv is specified, each entity will be exported to a separate CSV file and listed separately in the response.
+            example: xlsx
         - name: zip
           in: query
           schema:
             type: boolean
             default: true
             description: Determines is the output data is zipped. Defaults to true. If this is combined with type=csv, each file in the response is individually zipped.
+            example: true
       responses:
         '200':
           description: Data exported successfully
