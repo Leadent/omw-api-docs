@@ -416,7 +416,7 @@ paths:
   /data/export:
     get:
       summary: Export data from the On My Way system
-      description: Exports data from the On My Way system including notifications, clicks, rebooks and activities. The response is a JSON object that contains a link to a zip file with a Microsoft Excel spreadsheet inside which, in turn, contains the data
+      description: Exports data from the On My Way system including notifications, clicks, rebooks and activities. The response is a JSON object that contains a links to files containing the data. The caller can determine if the output is CSV or a Microsoft Excel spreadsheet, and whether it's zipped.
       parameters:
         - name: from
           in: query
@@ -430,13 +430,28 @@ paths:
           schema:
             type: string
             example: 2025-01-10
+        - name: type
+          in: query
+          schema:
+            type: string
+            default: xlsx
+            enum:
+              - xlsx
+              - csv
+            description: The type of data to export. Defaults to xlsx. If csv is specified, each entity will be exported to a separate CSV file and listed separately in the response.
+        - name: zip
+          in: query
+          schema:
+            type: boolean
+            default: true
+            description: Determines is the output data is zipped. Defaults to true. If this is combined with type=csv, each file in the response is individually zipped.
       responses:
         '200':
           description: Data exported successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataExtractResponse'
+                $ref: '#/components/schemas/ExportResult'
         '400':
           description: Invalid request parameters
           content:
@@ -672,7 +687,6 @@ components:
               maxLength: 11
               description: The name of the brand used as a sender ID in SMS messages. Limited to 11 characters.
               example: Telneda
-
     ActivityResponse:
       allOf:
         - $ref: '#/components/schemas/ActivityRequest'
@@ -788,6 +802,42 @@ components:
         - VISIT_COMPLETE
         - COMPLETED
         - INCOMPLETE
+    XlsxData:
+      type: object
+      properties:
+        all:
+          type: string
+      required:
+        - all
+
+    CsvData:
+      type: object
+      properties:
+        clicks:
+          type: string
+        notifications:
+          type: string
+        activities:
+          type: string
+        rebooks:
+          type: string
+
+    ExportResult:
+      oneOf:
+        - type: object
+          properties:
+            xlsx:
+              $ref: '#/components/schemas/XlsxData'
+          required:
+            - xlsx
+          additionalProperties: false
+        - type: object
+          properties:
+            csv:
+              $ref: '#/components/schemas/CsvData'
+          required:
+            - csv
+          additionalProperties: false
     BulkResourceResponse:
       type: object
       properties:
@@ -896,9 +946,3 @@ components:
                         type: string
       required:
         - validationErrors
-    DataExtractResponse:
-        type: object
-        properties:
-            exportName:
-              type: string
-              example: 'https://some-path-to-download.com/somefile'
