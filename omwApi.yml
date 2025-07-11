@@ -416,10 +416,12 @@ paths:
   /data/export:
     get:
       summary: Export data from the On My Way system
-      description: Exports data from the On My Way system including notifications, clicks, rebooks and activities. The response is a JSON object that contains a links to files containing the data. The caller can determine if the output is CSV or a Microsoft Excel spreadsheet, and whether it's zipped.
+      description: Exports data from the On My Way system including notifications, clicks, rebooks and activities. The response is a JSON object that contains links to files containing the data. The caller can determine if the output is multiple CSV files or a single consolidated Microsoft Excel spreadsheet, and whether the files are zipped.
       parameters:
         - name: from
           in: query
+          style: form
+          explode: false
           required: true
           schema:
             type: string
