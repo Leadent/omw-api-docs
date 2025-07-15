@@ -1,6 +1,17 @@
 window.onload = function() {
   // API configurations
-  const apis = APIS_CONFIG_PLACEHOLDER;
+  const apis = [
+    {
+      url: "omwApi.yml",
+      name: "OMW API",
+      description: "Main application API"
+    },
+    {
+      url: "testApi.yml",
+      name: "Test API",
+      description: "Simple test API for development"
+    }
+  ];
 
   // Initialize Swagger UI with the first API
   window.ui = SwaggerUIBundle({
