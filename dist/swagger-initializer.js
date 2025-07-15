@@ -3,7 +3,7 @@ window.onload = function() {
   const apis = [
     {
       url: "omwApi.yml",
-      name: "OMW API",
+      name: "On My Way API",
       description: "Main application API"
     },
     // Add new APIs here
