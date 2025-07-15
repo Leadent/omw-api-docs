@@ -7,7 +7,7 @@ on:
       yaml_files:
         description: 'Comma-separated list of YAML files (optional)'
         required: false
-        default: 'omwApi.yml,testApi.yml'
+        default: 'omwApi.yml'
 
 jobs:
   updateSwagger:
