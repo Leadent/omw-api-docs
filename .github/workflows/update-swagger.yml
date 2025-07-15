@@ -88,7 +88,11 @@ jobs:
           
               // Find the topbar
               const topbar = document.querySelector('.topbar');
-              if (!topbar) return;
+              if (!topbar) {
+                console.warn('Topbar not found, retrying in 100ms...');
+                setTimeout(addApiSelector, 100);
+                return;
+              }
           
               // Check if our selector already exists
               if (document.getElementById('api-selector-container')) return;
@@ -114,6 +118,7 @@ jobs:
           
               // Create dropdown
               const selector = document.createElement('select');
+              selector.id = 'api-selector';
               selector.style.cssText = `
                 padding: 8px 12px;
                 border: 1px solid #d4d4d4;
@@ -135,7 +140,7 @@ jobs:
               });
           
               // Add change handler
-              selector.addEventListener('change', (e) => {
+              selector.addEventListener('change', function(e) {
                 const selectedApi = apis.find(api => api.url === e.target.value);
                 if (selectedApi) {
                   // Update the URL and reload the spec
