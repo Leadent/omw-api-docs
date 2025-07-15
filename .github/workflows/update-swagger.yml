@@ -103,8 +103,13 @@ jobs:
               selectorContainer.style.cssText = `
                 display: flex;
                 align-items: center;
-                gap: 10px;
-                margin-left: 20px;
+                gap: 15px;
+                margin: 10px 30px;
+                padding: 15px 20px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border: 1px solid #e9ecef;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
               `;
           
               // Create label
@@ -113,21 +118,24 @@ jobs:
               label.style.cssText = `
                 color: #3b4151;
                 font-weight: 600;
-                font-size: 14px;
+                font-size: 16px;
+                margin-right: 5px;
               `;
           
               // Create dropdown
               const selector = document.createElement('select');
               selector.id = 'api-selector';
               selector.style.cssText = `
-                padding: 8px 12px;
-                border: 1px solid #d4d4d4;
-                border-radius: 4px;
+                padding: 12px 16px;
+                border: 2px solid #d4d4d4;
+                border-radius: 6px;
                 background: white;
-                font-size: 14px;
+                font-size: 16px;
                 color: #3b4151;
                 cursor: pointer;
-                min-width: 200px;
+                min-width: 250px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: all 0.2s ease;
               `;
           
               // Add options
@@ -182,12 +190,13 @@ jobs:
             /* Custom styles for API selector */
             #api-selector-container select:hover {
               border-color: #89bf04;
+              box-shadow: 0 4px 8px rgba(0,0,0,0.15);
             }
           
             #api-selector-container select:focus {
               outline: none;
               border-color: #89bf04;
-              box-shadow: 0 0 0 2px rgba(137, 191, 4, 0.2);
+              box-shadow: 0 0 0 3px rgba(137, 191, 4, 0.2);
             }
           
             /* Hide the default spec selector */
@@ -195,12 +204,35 @@ jobs:
               display: none !important;
             }
           
-            /* Add some spacing to the topbar */
+            /* Improve topbar layout */
             .topbar {
-              padding: 10px 20px;
+              padding: 20px;
               display: flex;
               align-items: center;
               justify-content: space-between;
+              flex-wrap: wrap;
+            }
+          
+            /* Make the selector container more prominent */
+            #api-selector-container {
+              flex-shrink: 0;
+              margin-bottom: 10px;
+            }
+          
+            /* Mobile responsive */
+            @media (max-width: 768px) {
+              #api-selector-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                margin: 10px 15px;
+                padding: 12px 15px;
+              }
+          
+              #api-selector-container select {
+                min-width: 100%;
+                width: 100%;
+              }
             }
           </style>
           EOF
