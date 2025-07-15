@@ -3,6 +3,11 @@ on:
   schedule:
     - cron:  '0 10 * * *'
   workflow_dispatch:
+    inputs:
+      yaml_files:
+        description: 'Comma-separated list of YAML files (optional)'
+        required: false
+        default: 'omwApi.yml'
 
 jobs:
   updateSwagger:
@@ -20,7 +25,7 @@ jobs:
         if: steps.swagger-ui.outputs.current_tag != steps.swagger-ui.outputs.release_tag
         env:
           RELEASE_TAG: ${{ steps.swagger-ui.outputs.release_tag }}
-          SWAGGER_YAML: "omwApi.yml"
+          SWAGGER_YAMLS: ${{ github.event.inputs.yaml_files || 'omwApi.yml' }}
         run: |
           # Delete the dist directory and index.html
           rm -fr dist index.html
@@ -31,11 +36,207 @@ jobs:
           rm $RELEASE_TAG
           # Move index.html to the root
           mv dist/index.html .
-          # Fix references in dist/swagger-initializer and index.html
-          sed -i "s|https://petstore.swagger.io/v2/swagger.json|$SWAGGER_YAML|g" dist/swagger-initializer.js
+          
+          # Build the APIs configuration
+          IFS=',' read -ra YAML_FILES <<< "$SWAGGER_YAMLS"
+          APIS_CONFIG="["
+          for i in "${!YAML_FILES[@]}"; do
+            yaml_file=$(echo "${YAML_FILES[$i]}" | xargs)
+            api_name=$(basename "$yaml_file" .yml)
+            # Create a display name (remove "Api" suffix and add spaces before capitals)
+            display_name=$(echo "$api_name" | sed 's/Api$//' | sed 's/\([A-Z]\)/ \1/g' | sed 's/^ //')
+          
+            if [ $i -gt 0 ]; then APIS_CONFIG+=","; fi
+            APIS_CONFIG+="{\"url\":\"$yaml_file\",\"name\":\"$display_name\"}"
+          done
+          APIS_CONFIG+="]"
+          
+          # Get the first API as default
+          FIRST_API=$(echo "${YAML_FILES[0]}" | xargs)
+          
+          # Create enhanced swagger-initializer.js with custom dropdown
+          cat > dist/swagger-initializer.js << 'EOF'
+          window.onload = function() {
+            // API configurations
+            const apis = APIS_CONFIG_PLACEHOLDER;
+          
+            // Initialize Swagger UI with the first API
+            window.ui = SwaggerUIBundle({
+              url: apis[0].url,
+              dom_id: '#swagger-ui',
+              deepLinking: true,
+              presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+              ],
+              plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+              ],
+              layout: "StandaloneLayout",
+              onComplete: function() {
+                // Add custom API selector after Swagger UI loads
+                addApiSelector();
+              }
+            });
+          
+            function addApiSelector() {
+              // Remove the default spec selector if it exists
+              const existingSelector = document.querySelector('.download-url-wrapper');
+              if (existingSelector) {
+                existingSelector.style.display = 'none';
+              }
+          
+              // Find the topbar
+              const topbar = document.querySelector('.topbar');
+              if (!topbar) {
+                console.warn('Topbar not found, retrying in 100ms...');
+                setTimeout(addApiSelector, 100);
+                return;
+              }
+          
+              // Check if our selector already exists
+              if (document.getElementById('api-selector-container')) return;
+          
+              // Create container for our selector
+              const selectorContainer = document.createElement('div');
+              selectorContainer.id = 'api-selector-container';
+              selectorContainer.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                margin: 10px 30px;
+                padding: 15px 20px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                border: 1px solid #e9ecef;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+              `;
+          
+              // Create label
+              const label = document.createElement('label');
+              label.textContent = 'Select API:';
+              label.style.cssText = `
+                color: #3b4151;
+                font-weight: 600;
+                font-size: 16px;
+                margin-right: 5px;
+              `;
+          
+              // Create dropdown
+              const selector = document.createElement('select');
+              selector.id = 'api-selector';
+              selector.style.cssText = `
+                padding: 12px 16px;
+                border: 2px solid #d4d4d4;
+                border-radius: 6px;
+                background: white;
+                font-size: 16px;
+                color: #3b4151;
+                cursor: pointer;
+                min-width: 250px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: all 0.2s ease;
+              `;
+          
+              // Add options
+              apis.forEach((api, index) => {
+                const option = document.createElement('option');
+                option.value = api.url;
+                option.textContent = api.name;
+                if (index === 0) option.selected = true;
+                selector.appendChild(option);
+              });
+          
+              // Add change handler
+              selector.addEventListener('change', function(e) {
+                const selectedApi = apis.find(api => api.url === e.target.value);
+                if (selectedApi) {
+                  // Update the URL and reload the spec
+                  window.ui.specActions.updateUrl(selectedApi.url);
+                  window.ui.specActions.download(selectedApi.url);
+          
+                  // Update the page title
+                  document.title = `${selectedApi.name} - API Documentation`;
+                }
+              });
+          
+              // Add elements to container
+              selectorContainer.appendChild(label);
+              selectorContainer.appendChild(selector);
+          
+              // Add container to topbar
+              topbar.appendChild(selectorContainer);
+          
+              // Set initial title
+              document.title = `${apis[0].name} - API Documentation`;
+            }
+          };
+          EOF
+          
+          # Replace the placeholder with actual API configuration
+          sed -i "s/APIS_CONFIG_PLACEHOLDER/$APIS_CONFIG/g" dist/swagger-initializer.js
+          
+          # Fix references in index.html
           sed -i "s|href=\"./|href=\"dist/|g" index.html
           sed -i "s|src=\"./|src=\"dist/|g" index.html
           sed -i "s|href=\"index|href=\"dist/index|g" index.html
+          
+          # Update the page title to be more descriptive
+          sed -i 's|<title>Swagger UI</title>|<title>API Documentation</title>|g' index.html
+          
+          # Add some custom CSS for better styling
+          cat >> index.html << 'EOF'
+          <style>
+            /* Custom styles for API selector */
+            #api-selector-container select:hover {
+              border-color: #89bf04;
+              box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+          
+            #api-selector-container select:focus {
+              outline: none;
+              border-color: #89bf04;
+              box-shadow: 0 0 0 3px rgba(137, 191, 4, 0.2);
+            }
+          
+            /* Hide the default spec selector */
+            .download-url-wrapper {
+              display: none !important;
+            }
+          
+            /* Improve topbar layout */
+            .topbar {
+              padding: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              flex-wrap: wrap;
+            }
+          
+            /* Make the selector container more prominent */
+            #api-selector-container {
+              flex-shrink: 0;
+              margin-bottom: 10px;
+            }
+          
+            /* Mobile responsive */
+            @media (max-width: 768px) {
+              #api-selector-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                margin: 10px 15px;
+                padding: 12px 15px;
+              }
+          
+              #api-selector-container select {
+                min-width: 100%;
+                width: 100%;
+              }
+            }
+          </style>
+          EOF
+          
           # Update current release
           echo ${{ steps.swagger-ui.outputs.release_tag }} > swagger-ui.version
       - name: Create Pull Request
@@ -45,6 +246,14 @@ jobs:
           title: Update SwaggerUI to ${{ steps.swagger-ui.outputs.release_tag }}
           body: |
             Updates [swagger-ui][1] to ${{ steps.swagger-ui.outputs.release_tag }}
+            
+            APIs included: ${{ env.SWAGGER_YAMLS }}
+            
+            **New Features:**
+            - ✅ User-friendly dropdown selector for switching between APIs
+            - ✅ Clear labels showing "Select API:" with descriptive names
+            - ✅ Automatic page title updates when switching APIs
+            - ✅ Improved styling and user experience
 
             Auto-generated by [create-pull-request][2]
 

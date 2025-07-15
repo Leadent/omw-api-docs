@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Swagger UI</title>
+    <title>API Documentation</title>
     <link rel="stylesheet" type="text/css" href="dist/swagger-ui.css" />
     <link rel="stylesheet" type="text/css" href="dist/index.css" />
     <link rel="icon" type="image/png" href="dist/favicon-32x32.png" sizes="32x32" />
@@ -17,3 +17,52 @@
     <script src="dist/swagger-initializer.js" charset="UTF-8"> </script>
   </body>
 </html>
+<style>
+  /* Custom styles for API selector */
+  #api-selector-container select:hover {
+    border-color: #89bf04;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+
+  #api-selector-container select:focus {
+    outline: none;
+    border-color: #89bf04;
+    box-shadow: 0 0 0 3px rgba(137, 191, 4, 0.2);
+  }
+
+  /* Hide the default spec selector */
+  .download-url-wrapper {
+    display: none !important;
+  }
+
+  /* Improve topbar layout */
+  .topbar {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  /* Make the selector container more prominent */
+  #api-selector-container {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    #api-selector-container {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 10px 15px;
+      padding: 12px 15px;
+    }
+
+    #api-selector-container select {
+      min-width: 100%;
+      width: 100%;
+    }
+  }
+</style>
