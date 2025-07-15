@@ -6,11 +6,12 @@ window.onload = function() {
       name: "OMW API",
       description: "Main application API"
     },
-    {
-      url: "testApi.yml",
-      name: "Test API",
-      description: "Simple test API for development"
-    }
+    // Add new APIs here
+    // {
+    //   url: "testApi.yml",
+    //   name: "Test API",
+    //   description: "Simple test API for development"
+    // }
   ];
 
   // Initialize Swagger UI with the first API
