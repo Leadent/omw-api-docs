@@ -1,87 +1,10 @@
-// Add these features to your swagger-initializer.js for even better UX
-
-// 1. Add API descriptions/tooltips
-const apis = [
-  {
-    url: "omwApi.yml",
-    name: "OMW API",
-    description: "Main application API"
-  },
-  {
-    url: "testApi.yml",
-    name: "Test API",
-    description: "Simple test API for development"
-  }
-];
-
-// 2. Add loading indicator when switching APIs
-selector.addEventListener('change', (e) => {
-  // Show loading state
-  selector.disabled = true;
-  selector.style.cursor = 'wait';
-
-  // Add loading text
-  const loadingOption = document.createElement('option');
-  loadingOption.textContent = 'Loading...';
-  loadingOption.selected = true;
-  selector.appendChild(loadingOption);
-
-  const selectedApi = apis.find(api => api.url === e.target.value);
-  if (selectedApi) {
-    window.ui.specActions.updateUrl(selectedApi.url);
-    window.ui.specActions.download(selectedApi.url);
-
-    // Reset after a short delay
-    setTimeout(() => {
-      selector.removeChild(loadingOption);
-      selector.disabled = false;
-      selector.style.cursor = 'pointer';
-      selector.value = selectedApi.url;
-    }, 500);
-  }
-});
-
-// 3. Add keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-  // Alt + 1, 2, 3, etc. to switch APIs
-  if (e.altKey && e.key >= '1' && e.key <= '9') {
-    const apiIndex = parseInt(e.key) - 1;
-    if (apis[apiIndex]) {
-      const selector = document.getElementById('api-selector');
-      selector.value = apis[apiIndex].url;
-      selector.dispatchEvent(new Event('change'));
-    }
-  }
-});
-
-// 4. Add API count indicator
-const countIndicator = document.createElement('span');
-countIndicator.textContent = `(${apis.length} APIs)`;
-countIndicator.style.cssText = `
-  color: #666;
-  font-size: 12px;
-  margin-left: 5px;
-`;
-label.appendChild(countIndicator);
-
-// 5. Add help text/instructions
-const helpText = document.createElement('div');
-helpText.style.cssText = `
-  font-size: 12px;
-  color: #666;
-  margin-top: 5px;
-  font-style: italic;
-`;
-helpText.textContent = 'Use Alt+1, Alt+2, etc. for quick switching';
-selectorContainer.appendChild(helpText);
-
-
 window.onload = function() {
-  //<editor-fold desc="Changeable Configuration Block">
+  // API configurations
+  const apis = APIS_CONFIG_PLACEHOLDER;
 
-  // the following lines will be replaced by docker/configurator, when it runs in a docker-container
+  // Initialize Swagger UI with the first API
   window.ui = SwaggerUIBundle({
-    url: "omwApi.yml",
+    url: apis[0].url,
     dom_id: '#swagger-ui',
     deepLinking: true,
     presets: [
@@ -91,8 +14,118 @@ window.onload = function() {
     plugins: [
       SwaggerUIBundle.plugins.DownloadUrl
     ],
-    layout: "StandaloneLayout"
+    layout: "StandaloneLayout",
+    onComplete: function() {
+      // Add custom API selector after Swagger UI loads
+      setTimeout(addApiSelector, 500); // Give it more time to load
+    }
   });
 
-  //</editor-fold>
+  function addApiSelector() {
+    try {
+      // Remove the default spec selector if it exists
+      const existingSelector = document.querySelector('.download-url-wrapper');
+      if (existingSelector) {
+        existingSelector.style.display = 'none';
+      }
+
+      // Find the topbar
+      const topbar = document.querySelector('.topbar');
+      if (!topbar) {
+        console.warn('Topbar not found, retrying...');
+        setTimeout(addApiSelector, 200);
+        return;
+      }
+
+      // Check if our selector already exists
+      if (document.getElementById('api-selector-container')) {
+        console.log('API selector already exists');
+        return;
+      }
+
+      console.log('Adding API selector...');
+
+      // Create container for our selector
+      const selectorContainer = document.createElement('div');
+      selectorContainer.id = 'api-selector-container';
+      selectorContainer.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: 20px;
+      `;
+
+      // Create label
+      const label = document.createElement('label');
+      label.textContent = 'Select API:';
+      label.style.cssText = `
+        color: #3b4151;
+        font-weight: 600;
+        font-size: 14px;
+      `;
+
+      // Create dropdown
+      const apiSelector = document.createElement('select');
+      apiSelector.id = 'api-selector';
+      apiSelector.style.cssText = `
+        padding: 8px 12px;
+        border: 1px solid #d4d4d4;
+        border-radius: 4px;
+        background: white;
+        font-size: 14px;
+        color: #3b4151;
+        cursor: pointer;
+        min-width: 200px;
+      `;
+
+      // Add options
+      apis.forEach(function(api, index) {
+        const option = document.createElement('option');
+        option.value = api.url;
+        option.textContent = api.name;
+        if (index === 0) option.selected = true;
+        apiSelector.appendChild(option);
+      });
+
+      // Add change handler
+      apiSelector.addEventListener('change', function(e) {
+        try {
+          const selectedUrl = e.target.value;
+          const selectedApi = apis.find(function(api) {
+            return api.url === selectedUrl;
+          });
+
+          if (selectedApi) {
+            console.log('Switching to API:', selectedApi.name);
+
+            // Update the URL and reload the spec
+            if (window.ui && window.ui.specActions) {
+              window.ui.specActions.updateUrl(selectedApi.url);
+              window.ui.specActions.download(selectedApi.url);
+            }
+
+            // Update the page title
+            document.title = selectedApi.name + ' - API Documentation';
+          }
+        } catch (error) {
+          console.error('Error switching API:', error);
+        }
+      });
+
+      // Add elements to container
+      selectorContainer.appendChild(label);
+      selectorContainer.appendChild(apiSelector);
+
+      // Add container to topbar
+      topbar.appendChild(selectorContainer);
+
+      // Set initial title
+      document.title = apis[0].name + ' - API Documentation';
+
+      console.log('API selector added successfully');
+
+    } catch (error) {
+      console.error('Error adding API selector:', error);
+    }
+  }
 };
