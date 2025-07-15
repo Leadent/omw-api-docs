@@ -1,0 +1,860 @@
+openapi: 3.0.0
+info:
+  title: OnMyWay API
+  description: The OnMyWay API provides a set of endpoints for managing resources, activities and events in the OnMyWay system.
+  version: 0.0.4
+servers:
+  - url: https://telneda.leadent-api.digital/v1
+    description: Main API server
+  - url: https://telneda.auth.eu-west-2.amazoncognito.com/oauth2/token
+    description: Authentication server
+security:
+  - BearerAuth: [] # Applies to all paths unless overridden
+paths:
+  /oauth2/token:
+    post:
+      summary: API authentication
+      description: Authenticates credentials and returns a token to be used on subsequent requests. `grant_type` must be set
+        to `client_credentials`. Values for other fields are client-specific, provided by Leadent.
+      security: [] # No authentication required
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - client_id
+                - client_secret
+                - scope
+              properties:
+                grant_type:
+                  type: string
+                  example: client_credentials
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                scope:
+                  type: string
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT token
+                    example: eyJraWQiOiJk
+                  expires_in:
+                    type: integer
+                    description: Token expiration time in seconds
+                    example: 3600
+                  token_type:
+                    type: string
+                    description: Type of the token
+                    example: Bearer
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /resource/{datasetId}/{resourceId}:
+    put:
+      summary: Create or update a resource
+      description: All fields are optional. If a field is omitted then the previous value will be retained. An explicit value of
+        null should be provided to remove a field.
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: northwest1
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 87640941
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '200':
+          description: Resource created or updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get a resource
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: northwest1
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 87640941
+      responses:
+        '200':
+          description: Resource retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /resource/{datasetId}/bulk:
+    put:
+      summary: Create or update a bulk set of resources
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: northwest1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/QualifiedResource'
+              maxItems: 100
+      responses:
+        '200':
+          description: Request valid and handled, with response indicating success/failure for each resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkResourceResponse'
+        '400':
+          description: Invalid request. If validation fails for any resource, then the whole request is considered invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /resource/{datasetId}/{resourceId}/event:
+    post:
+      summary: Provide a resource event
+      description: The event and timestamp fields are required. The location field is required for LOCATION events but can be
+        provided on any event.
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: northwest1
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 87640941
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceEvent'
+      responses:
+        '204':
+          description: Event processed successfully
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /resource/{datasetId}/event/bulk:
+    post:
+      summary: Provide a bulk set of resource events
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: northwest1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/QualifiedResourceEvent'
+              maxItems: 100
+      responses:
+        '200':
+          description: Request is valid and has been handled, with the response indicating success/failure count and details for any failures
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkResourceResponse'
+        '400':
+          description: Invalid request. If validation fails for any resource, then the whole request is considered invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /activity/{datasetId}/{activityId}:
+    put:
+      summary: Create or update an activity
+      description:
+        Creates or updates an activity. All fields are optional. If a field is omitted then the previous value will be retained.
+        An explicit value of null can be provided to remove a field (not supported for booleans). Latitude and longitude fields
+        must be provided together. If only one is provided, the request will be rejected.
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: northwest1
+        - name: activityId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 57836113
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityRequest'
+      responses:
+        '200':
+          description: Activity created or updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get an activity
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: activityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Activity details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /activity/{datasetId}/{activityId}/allocation:
+    post:
+      summary: Provide an activity allocation update
+      description: Updates the referenced activity's allocation details. If a field is omitted then the previous value will be
+        retained. An explicit value of null can be provided to remove a field, such as resourceId if an activity becomes
+        unallocated.
+      operationId: allocateResource
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: activityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resourceId:
+                  type: string
+                  description: The id of the allocated resource
+                startTime:
+                  type: string
+                  format: date-time
+                  description: The time the resource is expected to start the activity
+                duration:
+                  type: integer
+                  description: The duration of the activity in minutes
+                visitStatus:
+                  $ref: '#/components/schemas/VisitStatus'
+                routeIndex:
+                  type: integer
+                  description: The index of this activity in the technician's route relative to their current activity, i.e. where current = 0, next = 1, etc.
+      responses:
+        '204':
+          description: Allocation details updated successfully
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Location:
+      type: object
+      description: Note that when specifying a lat/long, both must be provided.
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 51.5074
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 0.1278
+    AddressedLocation:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 51.5074
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 0.1278
+        streetAddress:
+          type: string
+          example: 1 Sherwood Drive
+        city:
+          type: string
+          example: Bletchley
+        area:
+          type: string
+          description: |
+            Geographical area which forms part of the postal address and can optionally be displayed to the end-customer.
+            Can be used to represent a county, state, province, country, as suitable.
+          example: Buckinghamshire
+        postalCode:
+          type: string
+          example: MK3 6EB
+        region:
+          type: string
+          description: |
+            Geographical region to which a resource is associated for scheduling purposes. Not part of the postal address
+            displayed to the end-customer, but can be used to drive OMW behaviour, such as notification rules.
+          example: SW
+        timezone:
+          type: string
+          description: IANA timezone format. Defaults to system configured timezone.
+          example: Europe/London
+    Resource:
+      type: object
+      properties:
+        identity:
+          type: object
+          description: Identity details of the resource
+          properties:
+            resourceType:
+              type: string
+              description: Any string, usually an enumeration in the client system. Can be used to drive OMW behaviour.
+              example: GASTECH
+            firstName:
+              type: string
+              description: First name of the resource
+              example: Lea
+            lastName:
+              type: string
+              description: Last name / surname of the resource
+              example: Dent
+        baseLocation:
+          allOf:
+            - description: Location where the resource is based, such as their home or depot
+            - $ref: '#/components/schemas/Location'
+    QualifiedResource:
+      allOf:
+        - type: object
+          properties:
+            resourceId:
+              type: string
+              example: 87640941
+          required:
+            - resourceId
+        - $ref: '#/components/schemas/Resource'
+    ResourceEvent:
+      type: object
+      required:
+        - event
+        - timestamp
+      properties:
+        event:
+          type: string
+          enum:
+            - LOCATION
+            - LOGON
+            - LOGOFF
+            - BREAK_START
+            - BREAK_END
+          description: The type of event
+        location:
+          allOf:
+            - $ref: '#/components/schemas/Location'
+            - description: The location of the resource. Expected for LOCATION event but can be provided on any event. Set to null to remove the previous location.
+        timestamp:
+          type: string
+          format: date-time
+          description: Date/time the event occurred
+    QualifiedResourceEvent:
+      allOf:
+        - type: object
+          properties:
+            resourceId:
+              type: string
+              example: 87640941
+          required:
+            - resourceId
+        - $ref: '#/components/schemas/ResourceEvent'
+    ActivityRequest:
+      type: object
+      properties:
+        identity:
+          type: object
+          description: Details identifying the activity and its type
+          properties:
+            activityType:
+              type: string
+              description: Any string, usually an enumeration in the client system. Can be used to drive OMW behaviour.
+              example: GASINST
+            description:
+              type: string
+              description: A description of this specific activity.
+              example: Install gas boiler TNPro7000
+            passcode:
+              type: string
+              description: Required to be entered by the customer to use the OMW app.
+              example: SW1ADent
+        allocation:
+          type: object
+          description: Details relating to scheduling system updates.
+          properties:
+            visitStatus:
+              $ref: '#/components/schemas/VisitStatus'
+        handling:
+          type: object
+          description: Flags which affect how the activity is handled.
+          properties:
+            confirmed:
+              type: boolean
+              description: If the appointment confirmation process is enabled and this is false, the appointment needs to be explicitly confirmed by the customer.
+            appointed:
+              type: boolean
+              default: true
+              description: If false, the appointment is provisional and will not be communicated with the customer.
+        serviceWindow:
+          type: object
+          description: The time window for the appointment that has been communicated to the customer.
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        location:
+          allOf:
+            - description: Details relating to the geographical location of the appointment.
+            - $ref: '#/components/schemas/AddressedLocation'
+        campaign:
+          type: object
+          description: Details relating to campaign banners display for this activity on the OMW app.
+          properties:
+            categories:
+              type: array
+              items:
+                type: string
+              example:
+                - GAS
+                - NORTH
+        customer:
+          type: object
+          description: Details relating to the customer.
+          properties:
+            firstName:
+              type: string
+              example: Denise
+            lastName:
+              type: string
+              example: Smith
+            emailAddress:
+              type: string
+              example: denise.smith@example.com
+            mobileNumber:
+              type: string
+              example: 07700123456
+        brand:
+          type: object
+          description: Details relating to the brand that should be displayed to the customer where multiple brands are used.
+          properties:
+            name:
+              type: string
+              description: The full name of the brand.
+              example: Telneda Gas and Electric
+            senderName:
+              type: string
+              maxLength: 11
+              description: The name of the brand used as a sender ID in SMS messages. Limited to 11 characters.
+              example: Telneda
+
+    ActivityResponse:
+      allOf:
+        - $ref: '#/components/schemas/ActivityRequest'
+        - type: object
+          properties:
+            identity:
+              type: object
+              description: Unique identifiers for this activity in OMW.
+              properties:
+                leadentId:
+                  type: string
+                  description: Unique OMW id/token for this activity, derived from datasetId and activityId.
+                  example: arxkoiDvPy8vL49fSmPj4
+                omwLink:
+                  type: string
+                  description: Unique OMW URL for this activity.
+                  example: https://ldnt.cc/nx1r
+            handling:
+              type: object
+              description: Flags which affect how the activity is handled.
+              properties:
+                processingDisabled:
+                  type: boolean
+                  default: false
+                  description: If true, OMW will not process updates for this activity.
+                confirmationTime:
+                  type: string
+                  format: date-time
+                  description: Time the appointment was confirmed by the customer or system.
+                confirmationType:
+                  type: string
+                  enum:
+                    - PROCESS_NOT_ENABLED
+                    - PRIMARY_SYSTEM_CONFIRMED
+                    - CUT_OFF_TIME_PASSED
+                    - CUSTOMER_REBOOKED
+                    - CUSTOMER_CONFIRMED
+                  description: The type of confirmation.
+            audit:
+              type: object
+              description: Times of activity life-cycle events.
+              properties:
+                createTime:
+                  type: string
+                  format: date-time
+                  description: Time the activity was first created in OMW.
+                activateTime:
+                  type: string
+                  format: date-time
+                  description: Time the activity was first activated.
+                lastUpdateTime:
+                  type: string
+                  format: date-time
+                  description: Time the activity was last updated.
+            location:
+              type: object
+              properties:
+                timezoneDefaulted:
+                  type: boolean
+                  description: Flag indicating if the timezone has been defaulted.
+            allocation:
+              type: object
+              description: Details relating to scheduling system updates.
+              properties:
+                resourceId:
+                  type: string
+                  example: 87640941
+                resourceType:
+                  type: string
+                  example: GASTECH
+                startTime:
+                  type: string
+                  description: The time the resource is expected to start the activity
+                  format: date-time
+                duration:
+                  type: number
+                  description: The duration of the activity in minutes
+                  example: 120
+                visitStatus:
+                  $ref: '#/components/schemas/VisitStatus'
+                routeIndex:
+                  type: number
+                  description: The index of this activity in the technician's route relative to their current activity, i.e. where current = 0, next = 1, etc.
+    VisitStatus:
+      description: |
+        This status captures the progress of the activity through its lifecycle. The statuses are fine-grained and not
+        all will be applicable to client systems. Status can be used to trigger notification rules. The status values are grouped
+        into a simplified status which is used to drive behaviour of the OMW app, including what text to display. These simplified
+        statuses are listed below (with the full statuses which map to them in brackets):
+        - Cancelled (CANCELLED)
+        - Unscheduled (UNSCHEDULED, IGNORE)
+        - Pending (UNALLOCATED, ALLOCATED, FOLLOW_ON, COMMITTED, SENT, DOWNLOADED, ACCEPTED)
+        - En Route (TRAVELLING, WAITING)
+        - Started (ON_SITE, PENDING_COMPLETION)
+        - Completed (VISIT_COMPLETE, COMPLETED)
+        - Incomplete (INCOMPLETE)
+      type: string
+      enum:
+        - CANCELLED
+        - UNSCHEDULED
+        - IGNORE
+        - UNALLOCATED
+        - ALLOCATED
+        - FOLLOW_ON
+        - COMMITTED
+        - SENT
+        - DOWNLOADED
+        - ACCEPTED
+        - TRAVELLING
+        - WAITING
+        - ON_SITE
+        - PENDING_COMPLETION
+        - VISIT_COMPLETE
+        - COMPLETED
+        - INCOMPLETE
+    BulkResourceResponse:
+      type: object
+      properties:
+        successCount:
+          type: integer
+          example: 99
+        failureCount:
+          type: integer
+          example: 1
+        failures:
+          type: array
+          items:
+            type: object
+            properties:
+              resourceId:
+                type: string
+                example: '343987'
+              message:
+                type: string
+                example: 'Failed to persist'
+      required:
+        - validationErrors
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 'Could not handle request: [reason]'
+      required:
+        - message
+    ValidationErrorResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      properties:
+        validationErrors:
+          type: object
+          example:
+            _errors: []
+            property1:
+              _errors: ["Expected 'ON' | 'OFF', received 'END'"]
+            property2:
+              _errors: ['Expected string, received null']
+          properties:
+            _errors:
+              type: array
+              items:
+                type: string
+            property1:
+              type: object
+              properties:
+                _errors:
+                  type: array
+                  items:
+                    type: string
+            property2:
+              type: object
+              properties:
+                _errors:
+                  type: array
+                  items:
+                    type: string
+      required:
+        - validationErrors
+    BulkValidationErrorResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+      properties:
+        validationErrors:
+          type: object
+          example:
+            _errors: []
+            5:
+              _errors: []
+              propertyX:
+                _errors: ["Expected 'ON' | 'OFF', received 'END'"]
+            7:
+              _errors: []
+              propertyY:
+                _errors: ['Expected string, received null']
+          properties:
+            0:
+              type: object
+              properties:
+                _errors:
+                  type: array
+                  items:
+                    type: string
+                propertyX:
+                  type: object
+                  properties:
+                    _errors:
+                      type: array
+                      items:
+                        type: string
+            1:
+              type: object
+              properties:
+                propertyY:
+                  type: object
+                  properties:
+                    _errors:
+                      type: array
+                      items:
+                        type: string
+      required:
+        - validationErrors
