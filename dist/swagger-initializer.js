@@ -1,25 +1,6 @@
-window.onload = function() {
-  //<editor-fold desc="Changeable Configuration Block">
+// Add these features to your swagger-initializer.js for even better UX
 
-  // the following lines will be replaced by docker/configurator, when it runs in a docker-container
-  window.ui = SwaggerUIBundle({
-    url: "omwApi.yml",
-    dom_id: '#swagger-ui',
-    deepLinking: true,
-    presets: [
-      SwaggerUIBundle.presets.apis,
-      SwaggerUIStandalonePreset
-    ],
-    plugins: [
-      SwaggerUIBundle.plugins.DownloadUrl
-    ],
-    layout: "StandaloneLayout"
-  });
-
-  //</editor-fold>
-};
-
-
+// 1. Add API descriptions/tooltips
 const apis = [
   {
     url: "omwApi.yml",
@@ -33,6 +14,7 @@ const apis = [
   }
 ];
 
+// 2. Add loading indicator when switching APIs
 selector.addEventListener('change', (e) => {
   // Show loading state
   selector.disabled = true;
@@ -92,3 +74,25 @@ helpText.style.cssText = `
 `;
 helpText.textContent = 'Use Alt+1, Alt+2, etc. for quick switching';
 selectorContainer.appendChild(helpText);
+
+
+window.onload = function() {
+  //<editor-fold desc="Changeable Configuration Block">
+
+  // the following lines will be replaced by docker/configurator, when it runs in a docker-container
+  window.ui = SwaggerUIBundle({
+    url: "omwApi.yml",
+    dom_id: '#swagger-ui',
+    deepLinking: true,
+    presets: [
+      SwaggerUIBundle.presets.apis,
+      SwaggerUIStandalonePreset
+    ],
+    plugins: [
+      SwaggerUIBundle.plugins.DownloadUrl
+    ],
+    layout: "StandaloneLayout"
+  });
+
+  //</editor-fold>
+};
