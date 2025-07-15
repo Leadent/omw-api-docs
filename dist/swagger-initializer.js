@@ -7,11 +7,11 @@ window.onload = function() {
       description: "Main application API"
     },
     // Add new APIs here
-    // {
-    //   url: "testApi.yml",
-    //   name: "Test API",
-    //   description: "Simple test API for development"
-    // }
+    {
+      url: "testApi.yml",
+      name: "Test API",
+      description: "Simple test API for development"
+    }
   ];
 
   // Initialize Swagger UI with the first API
