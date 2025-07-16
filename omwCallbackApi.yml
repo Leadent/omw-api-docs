@@ -1,0 +1,201 @@
+openapi: 3.0.0
+info:
+  title: On My Way Callback API
+  description: 
+    API supported by OMW for making callbacks to other systems. All callbacks are `POST`s with a common set of base properties
+    including `datasetId`, `activityId` and `requestType`. The paths for each supported callback are configurable and can
+    optionally include the `datasetId` and `activityId` as path params or query parameters, if a more RESTful design is preferred.
+    All callbacks can be configured the same endpoint such that all requests are handled by a common handler, if desired.
+  version: 1.0.0
+servers:
+  - url: https://telneda.leadent-api.digital
+    description: Demo Callback API server
+paths:
+  /confirm:
+    post:
+      summary: Customer appointment confirmation
+      description: Called when a customer attempts to explicitly confirm or rebook an unconfirmed appointment. The operation will
+        only continue if a success response is returned. Only applicable if confirmation feature is enabled.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmationCallbackRequest'
+      responses:
+        '204':
+          description: Confirmation processed successfully
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /requestSlots:
+    post:
+      summary: Request rebooking slots
+      description: Called when a customer requests to rebook their appointment to retrieve available rebooking slots.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestSlotsCallbackRequest'
+      responses:
+        '200':
+          description: Array of available rebooking slots. The `slotId` is optional, but if provided, it will be passed back on
+            a request to accept the slot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestSlotsCallbackResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /acceptSlot:
+    post:
+      summary: Accept rebooking slot
+      description: Called when a customer accepts a rebooking.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptSlotsCallbackRequest'
+      responses:
+        '204':
+          description: Slot accepted successfully
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CallbackRequestBase:
+      type: object
+      required:
+        - datasetId
+        - activityId
+        - requestTime
+        - requestId
+      properties:
+        datasetId:
+          type: string
+        activityId:
+          type: string
+        requestTime:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+
+    ConfirmationCallbackRequest:
+      allOf:
+        - $ref: '#/components/schemas/CallbackRequestBase'
+        - type: object
+          required:
+            - requestType
+          properties:
+            requestType:
+              type: string
+              enum: [confirm]
+
+    RequestSlotsCallbackRequest:
+      allOf:
+        - $ref: '#/components/schemas/CallbackRequestBase'
+        - type: object
+          required:
+            - requestType
+            - params
+          properties:
+            requestType:
+              type: string
+              enum: [requestSlots]
+            params:
+              type: object
+              required:
+                - dateFrom
+                - numberOfDays
+              properties:
+                dateFrom:
+                  type: string
+                  format: date
+                numberOfDays:
+                  type: integer
+
+    RequestSlotsCallbackResponse:
+      type: array
+      items:
+        type: object
+        required:
+          - slotStartTime
+          - slotEndTime
+          - slotValue
+        properties:
+          slotId:
+            type: string
+            nullable: true
+          slotStartTime:
+            type: string
+            format: date-time
+          slotEndTime:
+            type: string
+            format: date-time
+          slotValue:
+            type: number
+
+    AcceptSlotsCallbackRequest:
+      allOf:
+        - $ref: '#/components/schemas/CallbackRequestBase'
+        - type: object
+          required:
+            - requestType
+            - params
+          properties:
+            requestType:
+              type: string
+              enum: [acceptSlots]
+            params:
+              type: object
+              required:
+                - slotStartTime
+                - slotEndTime
+              properties:
+                slotId:
+                  type: string
+                  nullable: true
+                slotStartTime:
+                  type: string
+                  format: date-time
+                slotEndTime:
+                  type: string
+                  format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string

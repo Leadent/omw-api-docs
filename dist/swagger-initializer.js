@@ -6,12 +6,11 @@ window.onload = function() {
       name: "On My Way API",
       description: "Main application API"
     },
-    // Add new APIs here
-    // {
-    //   url: "testApi.yml",
-    //   name: "Test API",
-    //   description: "Simple test API for development"
-    // }
+    {
+      url: "omwCallbackApi.yml",
+      name: "OMW Callback API",
+      description: "API supported by OMW for making callback requests to other systems"
+    }
   ];
 
   // Initialize Swagger UI with the first API
