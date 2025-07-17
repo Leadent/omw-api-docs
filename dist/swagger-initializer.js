@@ -1,21 +1,45 @@
 window.onload = function() {
   // API configurations
-  const apis = [
-    {
-      url: "omwApi.yml",
-      name: "On My Way API",
-      description: "Main application API"
-    },
-    {
-      url: "omwCallbackApi.yml",
-      name: "OMW Callback API",
-      description: "API supported by OMW for making callback requests to other systems"
-    }
-  ];
+  const apis = [{"url":"omwApi.yml","name":"omw"},{"url":"omwCallbackApi.yml","name":"omw Callback"}];
 
-  // Initialize Swagger UI with the first API
+  // Function to get URL parameters
+  function getUrlParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+  }
+
+  // Function to update URL without page reload
+  function updateUrlParameter(key, value) {
+    const url = new URL(window.location);
+    if (value) {
+      url.searchParams.set(key, value);
+    } else {
+      url.searchParams.delete(key);
+    }
+    window.history.replaceState({}, '', url);
+  }
+
+  // Determine which API to load initially
+  let initialApiUrl = apis[0].url;
+  const apiParam = getUrlParameter('api');
+
+  if (apiParam) {
+    // Check if the API parameter matches any of our APIs
+    const matchedApi = apis.find(api => 
+      api.url === apiParam || 
+      api.url === apiParam + '.yml' ||
+      api.url === apiParam + '.yaml' ||
+      api.name.toLowerCase().replace(/\s+/g, '') === apiParam.toLowerCase()
+    );
+
+    if (matchedApi) {
+      initialApiUrl = matchedApi.url;
+    }
+  }
+
+  // Initialize Swagger UI with the determined API
   window.ui = SwaggerUIBundle({
-    url: apis[0].url,
+    url: initialApiUrl,
     dom_id: '#swagger-ui',
     deepLinking: true,
     presets: [
@@ -91,12 +115,14 @@ window.onload = function() {
       transition: all 0.2s ease;
     `;
 
-    // Add options
+    // Add options and set the selected one
     apis.forEach((api, index) => {
       const option = document.createElement('option');
       option.value = api.url;
       option.textContent = api.name;
-      if (index === 0) option.selected = true;
+      if (api.url === initialApiUrl) {
+        option.selected = true;
+      }
       selector.appendChild(option);
     });
 
@@ -104,6 +130,10 @@ window.onload = function() {
     selector.addEventListener('change', function(e) {
       const selectedApi = apis.find(api => api.url === e.target.value);
       if (selectedApi) {
+        // Update the URL parameter
+        const apiName = selectedApi.url.replace(/\.(yml|yaml)$/, '');
+        updateUrlParameter('api', apiName);
+
         // Update the URL and reload the spec
         window.ui.specActions.updateUrl(selectedApi.url);
         window.ui.specActions.download(selectedApi.url);
@@ -113,14 +143,50 @@ window.onload = function() {
       }
     });
 
+    // Create share button
+    const shareButton = document.createElement('button');
+    shareButton.textContent = 'Share Link';
+    shareButton.style.cssText = `
+      padding: 8px 16px;
+      background: #89bf04;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s ease;
+    `;
+
+    shareButton.addEventListener('click', function() {
+      navigator.clipboard.writeText(window.location.href).then(function() {
+        const originalText = shareButton.textContent;
+        shareButton.textContent = 'Copied!';
+        shareButton.style.background = '#28a745';
+        setTimeout(function() {
+          shareButton.textContent = originalText;
+          shareButton.style.background = '#89bf04';
+        }, 2000);
+      });
+    });
+
+    shareButton.addEventListener('mouseenter', function() {
+      shareButton.style.background = '#7ba004';
+    });
+
+    shareButton.addEventListener('mouseleave', function() {
+      shareButton.style.background = '#89bf04';
+    });
+
     // Add elements to container
     selectorContainer.appendChild(label);
     selectorContainer.appendChild(selector);
+    selectorContainer.appendChild(shareButton);
 
     // Add container to topbar
     topbar.appendChild(selectorContainer);
 
     // Set initial title
-    document.title = `${apis[0].name} - API Documentation`;
+    const initialApi = apis.find(api => api.url === initialApiUrl);
+    document.title = `${initialApi.name} - API Documentation`;
   }
 };
