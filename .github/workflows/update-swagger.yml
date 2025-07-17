@@ -251,7 +251,12 @@ jobs:
           EOF
           
           # Replace the placeholder with actual API configuration
-          sed -i "s/APIS_CONFIG_PLACEHOLDER/$APIS_CONFIG/g" dist/swagger-initializer.js
+          sed -i "s|APIS_CONFIG_PLACEHOLDER|$APIS_CONFIG|g" dist/swagger-initializer.js
+          
+          # Debug: Let's see what was generated
+          echo "Generated APIS_CONFIG: $APIS_CONFIG"
+          echo "Checking swagger-initializer.js content:"
+          head -20 dist/swagger-initializer.js
           
           # Fix references in index.html
           sed -i "s|href=\"./|href=\"dist/|g" index.html
