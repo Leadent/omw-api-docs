@@ -7,7 +7,7 @@ on:
       yaml_files:
         description: 'Comma-separated list of YAML files (optional)'
         required: false
-        default: 'omwApi.yml'
+        default: 'omwApi.yml,omwCallbackApi.yml'
 
 jobs:
   updateSwagger:
@@ -25,7 +25,7 @@ jobs:
         if: steps.swagger-ui.outputs.current_tag != steps.swagger-ui.outputs.release_tag
         env:
           RELEASE_TAG: ${{ steps.swagger-ui.outputs.release_tag }}
-          SWAGGER_YAMLS: ${{ github.event.inputs.yaml_files || 'omwApi.yml' }}
+          SWAGGER_YAMLS: ${{ github.event.inputs.yaml_files || 'omwApi.yml,omwCallbackApi.yml' }}
         run: |
           # Delete the dist directory and index.html
           rm -fr dist index.html
