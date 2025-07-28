@@ -49,8 +49,12 @@ paths:
               $ref: '#/components/schemas/RequestSlotsCallbackRequest'
       responses:
         '200':
-          description: Array of available rebooking slots. The `slotId` is optional, but if provided, it will be passed back on
-            a request to accept the slot.
+          description: |        
+            Array of available rebooking slots.
+            - `slotId` is optional, can be in any format and does not need to be unique. If provided, it will be passed back on a
+            request to accept the slot. 
+            - `slotGrade` indicates the quality of the slot, with `A` being the highest; `UNGRADED` (or not provided) indicates
+            that the slot does not have a grade.
           content:
             application/json:
               schema:
@@ -154,7 +158,6 @@ components:
         required:
           - slotStartTime
           - slotEndTime
-          - slotValue
         properties:
           slotId:
             type: string
@@ -165,8 +168,9 @@ components:
           slotEndTime:
             type: string
             format: date-time
-          slotValue:
-            type: number
+          slotGrade:
+            type: string
+            enum: [A, B, C, D, E, UNGRADED]
 
     AcceptSlotsCallbackRequest:
       allOf:
