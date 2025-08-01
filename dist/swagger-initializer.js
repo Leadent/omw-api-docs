@@ -1,17 +1,6 @@
 window.onload = function() {
   // API configurations
-  const apis = [
-    {
-      url: "omwApi.yml",
-      name: "On My Way API",
-      description: "Main application API"
-    },
-    {
-      url: "omwCallbackApi.yml",
-      name: "OMW Callback API",
-      description: "API supported by OMW for making callback requests to other systems"
-    }
-  ];
+  const apis = [{"url":"omwApi.yml","name":"omw"},{"url":"omwCallbackApi.yml","name":"omw Callback"}];
 
   console.log('Available APIs:', apis);
 
