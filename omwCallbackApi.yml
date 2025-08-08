@@ -71,6 +71,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /cancelSlotRequest:
+    post:
+      summary: Cancels a previous slot request
+      description: Called to cancel a previous slot request, as a result of an explicit customer action or a time-out
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSlotRequestCallbackRequest'
+      responses:
+        '204':
+          description: Slot request cancelled successfully
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'                
   /acceptSlot:
     post:
       summary: Accept rebooking slot
@@ -127,6 +152,17 @@ components:
             requestType:
               type: string
               enum: [confirm]
+
+    CancelSlotRequestCallbackRequest:
+      allOf:
+        - $ref: '#/components/schemas/CallbackRequestBase'
+        - type: object
+          required:
+            - requestType
+          properties:
+            requestType:        
+              type: string
+              enum: [cancelSlotRequest]
 
     RequestSlotsCallbackRequest:
       allOf:
