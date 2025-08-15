@@ -418,6 +418,13 @@ paths:
       summary: Export data from the On My Way system
       description: Exports data from the On My Way system including notifications, clicks, rebooks and activities. The response is a JSON object that contains links to files containing the data. The caller can determine if the output is multiple CSV files or a single consolidated Microsoft Excel spreadsheet, and whether the files are zipped.
       parameters:
+        - name: datasetId
+          in: query
+          required: true
+          description: Dataset identifier to export data from. This is the same as the datasetId used in other API calls.
+          schema:
+            type: string
+            example: northwest1
         - name: from
           in: query
           style: form
