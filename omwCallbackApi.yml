@@ -107,6 +107,12 @@ paths:
             schema:
               $ref: '#/components/schemas/AcceptSlotsCallbackRequest'
       responses:
+        '200':
+          description: Slot accepted successfully with new appointment created. The response includes the `datasetId` and `activityId` of the new appointment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcceptSlotCallbackResponse'
         '204':
           description: Slot accepted successfully
         '400':
@@ -234,6 +240,16 @@ components:
                 slotEndTime:
                   type: string
                   format: date-time
+    AcceptSlotCallbackResponse:
+      type: object
+      required:
+        - datasetId
+        - activityId
+      properties:
+        datasetId:
+          type: string
+        activityId:
+          type: string
     ErrorResponse:
       type: object
       properties:
