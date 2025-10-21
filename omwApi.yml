@@ -434,7 +434,7 @@ paths:
             type: string
             format: date
             example: 2025-07-01T13:00:00.000Z
-            description: 'From' date/time for the data export range, in ISO 8601 format. The query performs a lexical comparison, so the time component should be specified in UTC using the Z suffix rather than with a timezone offset, as per the example.
+            description: 'From' date/time for the data export range, in ISO 8601 format.
         - name: to
           in: query
           required: true
@@ -442,7 +442,7 @@ paths:
             type: string
             format: date
             example: 2025-07-02T15:30:00.000Z
-            description: 'To' date/time for the data export range, in ISO 8601 format. The query performs a lexical comparison, so the time component should be specified in UTC using the Z suffix rather than with a timezone offset, as per the example.
+            description: 'To' date/time for the data export range, in ISO 8601 format.
         - name: type
           in: query
           schema:
